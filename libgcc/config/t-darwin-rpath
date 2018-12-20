@@ -1,0 +1,5 @@
+# Use @rpath and add a search path to exes and dylibs that depend on this.
+SHLIB_RPATH = @rpath
+
+# Enable the libgcc_s.1.dylib compatibility lib to find the dependent 1.1.dylib.
+SHLIB_LOADER_PATH = -Wl,-rpath,@loader_path
