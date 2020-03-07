@@ -2822,6 +2822,15 @@ ifeq ($(strip $(filter-out darwin%,$(target_os))),)
   TOOLS_TARGET_PAIRS = indepsw.adb<indepsw-darwin.adb
 
   EH_MECHANISM=-gcc
+  # Darwin 8 does not support rpaths / @rpath.
+  ifeq ($(strip $(filter-out darwin8%,$(target_os))),)
+    GNATLIB_INSTALL_PREFIX = '$(ADA_RTL_DSO_DIR)'
+    GNATLIB_ADD_RPATHS =
+  else
+    GNATLIB_INSTALL_PREFIX = '@rpath'
+    GNATLIB_ADD_RPATHS = -nodefaultrpaths -Wl,-rpath,@loader_path/,-rpath,@loader_path/.. \
+		-Wl,-rpath,@loader_path/../../../../
+  endif
   GNATLIB_SHARED = gnatlib-shared-darwin
   GMEM_LIB = gmemlib
   LIBRARY_VERSION := $(LIB_VERSION)
