@@ -797,17 +797,15 @@ gnatlib-shared-darwin:
 		-o libgnat$(hyphen)$(LIBRARY_VERSION)$(soext) \
 		$(GNATRTL_NONTASKING_OBJS) $(LIBGNAT_OBJS) \
 		$(SO_OPTS) \
-		-Wl,-install_name,@rpath/libgnat$(hyphen)$(LIBRARY_VERSION)$(soext) \
-		-nodefaultrpaths -Wl,-rpath,@loader_path/,-rpath,@loader_path/.. \
-		-Wl,-rpath,@loader_path/../../../../ $(MISCLIB)
+		-Wl,-install_name,$(GNATLIB_INSTALL_PREFIX)/libgnat$(hyphen)$(LIBRARY_VERSION)$(soext) \
+		$(GNATLIB_ADD_RPATHS) $(MISCLIB)
 	cd $(RTSDIR); `echo "$(GCC_FOR_TARGET)" \
                 | sed -e 's,\./xgcc,../../xgcc,' -e 's,-B\./,-B../../,'` -dynamiclib $(PICFLAG_FOR_TARGET) \
 		-o libgnarl$(hyphen)$(LIBRARY_VERSION)$(soext) \
 		$(GNATRTL_TASKING_OBJS) \
 		$(SO_OPTS) \
-		-Wl,-install_name,@rpath/libgnarl$(hyphen)$(LIBRARY_VERSION)$(soext) \
-		-nodefaultrpaths -Wl,-rpath,@loader_path/,-rpath,@loader_path/.. \
-		-Wl,-rpath,@loader_path/../../../../ \
+		-Wl,-install_name,$(GNATLIB_INSTALL_PREFIX)/libgnarl$(hyphen)$(LIBRARY_VERSION)$(soext) \
+		$(GNATLIB_ADD_RPATHS) \
 		$(THREADSLIB) -Wl,libgnat$(hyphen)$(LIBRARY_VERSION)$(soext)
 	cd $(RTSDIR); $(LN_S) libgnat$(hyphen)$(LIBRARY_VERSION)$(soext) \
 		libgnat$(soext)
@@ -815,6 +813,7 @@ gnatlib-shared-darwin:
 		libgnarl$(soext)
 	cd $(RTSDIR); $(DSYMUTIL_FOR_TARGET) libgnat$(hyphen)$(LIBRARY_VERSION)$(soext)
 	cd $(RTSDIR); $(DSYMUTIL_FOR_TARGET) libgnarl$(hyphen)$(LIBRARY_VERSION)$(soext)
+
 
 gnatlib-shared:
 	$(MAKE) $(FLAGS_TO_PASS) \

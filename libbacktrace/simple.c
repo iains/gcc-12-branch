@@ -65,6 +65,13 @@ simple_unwind (struct _Unwind_Context *context, void *vdata)
   uintptr_t pc;
   int ip_before_insn = 0;
 
+#ifdef __APPLE__
+# undef HAVE_GETIPINFO
+# if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
+#  define HAVE_GETIPINFO 1
+# endif
+#endif
+
 #ifdef HAVE_GETIPINFO
   pc = _Unwind_GetIPInfo (context, &ip_before_insn);
 #else
