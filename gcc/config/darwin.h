@@ -309,12 +309,15 @@ extern GTY(()) int darwin_ms_struct;
 # define DARWIN_RPATH_LINK \
 "%{!r:%{!nostdlib:%{!nodefaultrpaths:%(darwin_rpaths)}}}"
 # define DARWIN_SHARED_LIBGCC "-lgcc_s.1.1"
+# define DARWIN_SHARED_WEAK_ADDS " "
 #else
 # define DARWIN_RPATH_LINK ""
 # define DARWIN_SHARED_LIBGCC \
-"%:version-compare(!> 10.11 mmacosx-version-min= -lgcc_s.1.1) \
- %:version-compare(>= 10.11 mmacosx-version-min= -lemutls_w) "
+"%:version-compare(!> 10.11 mmacosx-version-min= -lgcc_s.1.1)"
+# define DARWIN_SHARED_WEAK_ADDS \
+"; %:version-compare(>= 10.11 mmacosx-version-min= -lemutls_w)"
 #endif
+
 
 /* We might elect to add a path even when this compiler does not use embedded
    run paths, so that we can use libraries from an alternate compiler that is
@@ -555,8 +558,8 @@ extern GTY(()) int darwin_ms_struct;
 #define DARWIN_WEAK_CRTS \
 "%{static-libgcc|static:						  \
    %:version-compare(>= 10.6 mmacosx-version-min= -lemutls_w) ; \
-   shared-libgcc|fexceptions|fobjc-exceptions|fgnu-runtime: \
-     %:version-compare(>= 10.11 mmacosx-version-min= -lemutls_w) ; \
+   shared-libgcc|fexceptions|fobjc-exceptions|fgnu-runtime: " \
+     DARWIN_SHARED_WEAK_ADDS " ; \
    : -lemutls_w \
   }"
 
