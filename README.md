@@ -13,7 +13,18 @@ Please see gcc/config/aarch64/darwinpcs.md for a description of the macOS AArch6
 **Please report issues for this branch to:
 https://github.com/iains/gcc-12-branch/issues**
 
-**_The current release is GCC-12.1-darwin-r0._**
+**_The current release is GCC-12.1-darwin-r1. (June 2022)_**
+
+This release:
+ * Fixes a critical bug in the Arm64 port (related to Issue #3, which is unfixed in Xcode toolchains in common use).
+ * Adds a new configure option ```--with-darwin-extra-rpath=``` which allows a distribution to prepend a run path to the list automatically added by the compiler.  This is to allow for cases where the distribution refers to installed libraries using symlinks from outside the installation paths.
+ * Resolves a potential issue with library references where a minor GCC version is replaced by the next and the old version is deleted.
+ * Amends some of the system version processing to handle changes expected in macOS 13+.
+ * Improves interoperability with clang in mixed code projects.
+
+Thanks to contributors and testers.
+
+**_GCC-12.1-darwin-r0. (May 2022)_**
 
 Test results : https://github.com/iains/gcc-12-branch/issues/1#issuecomment-1120194463
 
@@ -22,4 +33,4 @@ Thanks to:
  * Andrew Burgess (while at Embecosm) for the work on heap based trampolines.
  * Maxim Blinov  (Embecosm) for work on modifications to GCC's function lowering code to enable better support of the Darwin Arm64 ABI.
 
-Iain Sandoe, May 2022
+Iain Sandoe.
