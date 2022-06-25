@@ -43,6 +43,7 @@
 LIBGCCJIT_VERSION_NUM = 0
 LIBGCCJIT_MINOR_NUM = 0
 LIBGCCJIT_RELEASE_NUM = 1
+COMMA := ,
 
 ifneq (,$(findstring mingw,$(target)))
 LIBGCCJIT_FILENAME = libgccjit-$(LIBGCCJIT_VERSION_NUM).dll
@@ -63,18 +64,14 @@ LIBGCCJIT_SONAME = \
 LIBGCCJIT_FILENAME = $(LIBGCCJIT_BASENAME).$(LIBGCCJIT_VERSION_NUM).dylib
 LIBGCCJIT_LINKER_NAME = $(LIBGCCJIT_BASENAME).dylib
 
-# Conditionalize the use of the LD_VERSION_SCRIPT_OPTION and
-# LD_SONAME_OPTION depending if configure found them, using $(if)
-# We have to define a COMMA here, otherwise the commas in the "true"
-# result are treated as separators by the $(if).
-COMMA := ,
-LIBGCCJIT_VERSION_SCRIPT_OPTION = \
-	$(if $(LD_VERSION_SCRIPT_OPTION),\
-	  -Wl$(COMMA)$(LD_VERSION_SCRIPT_OPTION)$(COMMA)$(srcdir)/jit/libgccjit.map)
+# TODO: translate the libgccjit.map into a form usable by Darwin's linker and
+# then check for linker support for -exported_symbols_list=.  Omitting this
+# means that all symbols in the libgccjit library will be visible.
+LIBGCCJIT_VERSION_SCRIPT_OPTION =
 
-LIBGCCJIT_SONAME_OPTION = \
-	$(if $(LD_SONAME_OPTION), \
-	     -Wl$(COMMA)$(LD_SONAME_OPTION)$(COMMA)$(LIBGCCJIT_SONAME))
+# This is a work-around fix for cross-compilation where the target linker
+# is ld and the host is ld64.
+LIBGCCJIT_SONAME_OPTION = -Wl,-install_name,$(LIBGCCJIT_SONAME)
 
 LIBGCCJIT_SONAME_SYMLINK = $(LIBGCCJIT_FILENAME)
 LIBGCCJIT_LINKER_NAME_SYMLINK = $(LIBGCCJIT_LINKER_NAME)
@@ -98,7 +95,6 @@ LIBGCCJIT_SONAME_SYMLINK = $(LIBGCCJIT_SONAME)
 # LD_SONAME_OPTION depending if configure found them, using $(if)
 # We have to define a COMMA here, otherwise the commas in the "true"
 # result are treated as separators by the $(if).
-COMMA := ,
 LIBGCCJIT_VERSION_SCRIPT_OPTION = \
 	$(if $(LD_VERSION_SCRIPT_OPTION),\
 	  -Wl$(COMMA)$(LD_VERSION_SCRIPT_OPTION)$(COMMA)$(srcdir)/jit/libgccjit.map)
