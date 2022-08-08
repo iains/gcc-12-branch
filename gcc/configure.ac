@@ -249,14 +249,22 @@ if test x${gcc_gxx_libcxx_include_dir} != x; then
   AC_DEFINE(ENABLE_STDLIB_OPTION, 1,
             [Define if the -stdlib= option should be enabled.])
 else
-  AC_DEFINE(ENABLE_STDLIB_OPTION, 0)
+  case $target in
+    *-darwin1[[1-9]]* | *-darwin2*)
+       # Default this on for Darwin versions which default to libcxx.
+       AC_DEFINE(ENABLE_STDLIB_OPTION, 1)
+       ;;
+    *)
+       AC_DEFINE(ENABLE_STDLIB_OPTION, 0)
+       ;;
+  esac
 fi
-# ??? This logic must match libstdc++-v3/acinclude.m4:GLIBCXX_EXPORT_INSTALL_INFO.
+
 if test x${gcc_gxx_libcxx_include_dir} = x; then
+  libcxx_incdir='include/c++/v1'
   if test x${enable_version_specific_runtime_libs} = xyes; then
-    gcc_gxx_libcxx_include_dir='${libsubdir}/libc++_include/c++/v1'
+    gcc_gxx_libcxx_include_dir='${libsubdir}/$libcxx_incdir'
   else
-    libcxx_incdir='libc++_include/c++/$(version)/v1'
     if test x$host != x$target; then
        libcxx_incdir="$target_alias/$libcxx_incdir"
     fi

@@ -3779,15 +3779,24 @@ if test x${gcc_gxx_libcxx_include_dir} != x; then
 $as_echo "#define ENABLE_STDLIB_OPTION 1" >>confdefs.h
 
 else
-  $as_echo "#define ENABLE_STDLIB_OPTION 0" >>confdefs.h
+  case $target in
+    *-darwin1[1-9]* | *-darwin2*)
+       # Default this on for Darwin versions which default to libcxx.
+       $as_echo "#define ENABLE_STDLIB_OPTION 1" >>confdefs.h
 
+       ;;
+    *)
+       $as_echo "#define ENABLE_STDLIB_OPTION 0" >>confdefs.h
+
+       ;;
+  esac
 fi
-# ??? This logic must match libstdc++-v3/acinclude.m4:GLIBCXX_EXPORT_INSTALL_INFO.
+
 if test x${gcc_gxx_libcxx_include_dir} = x; then
+  libcxx_incdir='include/c++/v1'
   if test x${enable_version_specific_runtime_libs} = xyes; then
-    gcc_gxx_libcxx_include_dir='${libsubdir}/libc++_include/c++/v1'
+    gcc_gxx_libcxx_include_dir='${libsubdir}/$libcxx_incdir'
   else
-    libcxx_incdir='libc++_include/c++/$(version)/v1'
     if test x$host != x$target; then
        libcxx_incdir="$target_alias/$libcxx_incdir"
     fi
@@ -19731,7 +19740,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 19734 "configure"
+#line 19743 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19837,7 +19846,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 19840 "configure"
+#line 19849 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
