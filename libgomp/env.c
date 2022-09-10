@@ -60,6 +60,7 @@
 #endif /* LIBGOMP_OFFLOADED_ONLY */
 
 #include "secure_getenv.h"
+#include "environ.h"
 
 struct gomp_task_icv gomp_global_icv = {
   .nthreads_var = 1,
