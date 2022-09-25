@@ -3838,6 +3838,25 @@ generate_tls_wrapper (tree fn)
   expand_or_defer_fn (finish_function (/*inline_p=*/false));
 }
 
+/* A dummy init function to act as a weak placeholder for a (possibly non-
+   existent) dynamic init.  */
+static void
+generate_tls_dummy_init (tree fn)
+{
+  tree var = DECL_BEFRIENDING_CLASSES (fn);
+  tree init_fn = get_tls_init_fn (var);
+  /* If have no init fn, or it is non-weak, then we do not need to make a
+     dummy.  */
+  if (!init_fn || !lookup_attribute ("weak", DECL_ATTRIBUTES (init_fn)))
+    return;
+  start_preparsed_function (init_fn, NULL_TREE, SF_DEFAULT | SF_PRE_PARSED);
+  tree body = begin_function_body ();
+  declare_weak (init_fn);
+  finish_return_stmt (NULL_TREE);
+  finish_function_body (body);
+  expand_or_defer_fn (finish_function (/*inline_p=*/false));
+}
+
 /* Start the process of running a particular set of global constructors
    or destructors.  Subroutine of do_[cd]tors.  Also called from
    vtv_start_verification_constructor_init_function.  */
@@ -5298,7 +5317,14 @@ c_parse_final_cleanups (void)
 	    }
 
 	  if (!DECL_INITIAL (decl) && decl_tls_wrapper_p (decl))
-	    generate_tls_wrapper (decl);
+	    {
+	      generate_tls_wrapper (decl);
+	      /* The wrapper might have a weak reference to an init, we provide
+		 a dummy function to satisfy that here.  The linker/dynamic
+		 loader will override this with the actual init, if one is
+		 required.  */
+	      generate_tls_dummy_init (decl);
+	    }
 
 	  if (!DECL_SAVED_TREE (decl))
 	    continue;
