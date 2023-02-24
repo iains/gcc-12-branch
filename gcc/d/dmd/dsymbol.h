@@ -164,7 +164,7 @@ struct FieldState
     unsigned fieldAlign;
     unsigned bitOffset;
 
-    bool inFlight;
+    d_bool inFlight;
 };
 
 class Dsymbol : public ASTNode
@@ -178,7 +178,7 @@ public:
     Loc loc;                    // where defined
     Scope *_scope;               // !=NULL means context to use for semantic()
     const utf8_t *prettystring;
-    bool errors;                // this symbol failed to pass semantic()
+    d_bool errors;                // this symbol failed to pass semantic()
     PASS semanticRun;
     unsigned short localNum;        // perturb mangled name to avoid collisions with those in FuncDeclaration.localsymtab
     DeprecatedDeclaration *depdecl; // customized deprecation message

@@ -92,78 +92,78 @@ enum class FeatureState : signed char
 // Put command line switches in here
 struct Param
 {
-    bool obj;           // write object file
-    bool link;          // perform link
-    bool dll;           // generate shared dynamic library
-    bool lib;           // write library file instead of object file(s)
-    bool multiobj;      // break one object file into multiple ones
-    bool oneobj;        // write one object file instead of multiple ones
-    bool trace;         // insert profiling hooks
-    bool tracegc;       // instrument calls to 'new'
-    bool verbose;       // verbose compile
-    bool vcg_ast;       // write-out codegen-ast
-    bool showColumns;   // print character (column) numbers in diagnostics
-    bool vtls;          // identify thread local variables
-    bool vtemplates;    // collect and list statistics on template instantiations
-    bool vtemplatesListInstances; // collect and list statistics on template instantiations origins
-    bool vgc;           // identify gc usage
-    bool vfield;        // identify non-mutable field variables
-    bool vcomplex;      // identify complex/imaginary type usage
-    bool vin;           // identify 'in' parameters
+    d_bool obj;           // write object file
+    d_bool link;          // perform link
+    d_bool dll;           // generate shared dynamic library
+    d_bool lib;           // write library file instead of object file(s)
+    d_bool multiobj;      // break one object file into multiple ones
+    d_bool oneobj;        // write one object file instead of multiple ones
+    d_bool trace;         // insert profiling hooks
+    d_bool tracegc;       // instrument calls to 'new'
+    d_bool verbose;       // verbose compile
+    d_bool vcg_ast;       // write-out codegen-ast
+    d_bool showColumns;   // print character (column) numbers in diagnostics
+    d_bool vtls;          // identify thread local variables
+    d_bool vtemplates;    // collect and list statistics on template instantiations
+    d_bool vtemplatesListInstances; // collect and list statistics on template instantiations origins
+    d_bool vgc;           // identify gc usage
+    d_bool vfield;        // identify non-mutable field variables
+    d_bool vcomplex;      // identify complex/imaginary type usage
+    d_bool vin;           // identify 'in' parameters
     unsigned char symdebug;  // insert debug symbolic information
-    bool symdebugref;   // insert debug information for all referenced types, too
-    bool optimize;      // run optimizer
+    d_bool symdebugref;   // insert debug information for all referenced types, too
+    d_bool optimize;      // run optimizer
     Diagnostic useDeprecated;
-    bool stackstomp;    // add stack stomping code
-    bool useUnitTests;  // generate unittest code
-    bool useInline;     // inline expand functions
+    d_bool stackstomp;    // add stack stomping code
+    d_bool useUnitTests;  // generate unittest code
+    d_bool useInline;     // inline expand functions
     FeatureState useDIP25;      // implement https://wiki.dlang.org/DIP25
     FeatureState useDIP1000; // implement https://dlang.org/spec/memory-safe-d.html#scope-return-params
-    bool useDIP1021;    // implement https://github.com/dlang/DIPs/blob/master/DIPs/accepted/DIP1021.md
-    bool release;       // build release version
-    bool preservePaths; // true means don't strip path from source file
+    d_bool useDIP1021;    // implement https://github.com/dlang/DIPs/blob/master/DIPs/accepted/DIP1021.md
+    d_bool release;       // build release version
+    d_bool preservePaths; // true means don't strip path from source file
     Diagnostic warnings;
     unsigned char pic;  // generate position-independent-code for shared libs
-    bool color;         // use ANSI colors in console output
-    bool cov;           // generate code coverage data
+    d_bool color;         // use ANSI colors in console output
+    d_bool cov;           // generate code coverage data
     unsigned char covPercent;   // 0..100 code coverage percentage required
-    bool ctfe_cov;      // generate coverage data for ctfe
-    bool nofloat;       // code should not pull in floating point support
-    bool ignoreUnsupportedPragmas;      // rather than error on them
-    bool useModuleInfo; // generate runtime module information
-    bool useTypeInfo;   // generate runtime type information
-    bool useExceptions; // support exception handling
-    bool noSharedAccess; // read/write access to shared memory objects
-    bool previewIn;     // `in` means `scope const`, perhaps `ref`, accepts rvalues
-    bool shortenedMethods; // allow => in normal function declarations
-    bool betterC;       // be a "better C" compiler; no dependency on D runtime
-    bool addMain;       // add a default main() function
-    bool allInst;       // generate code for all template instantiations
-    bool fix16997;      // fix integral promotions for unary + - ~ operators
+    d_bool ctfe_cov;      // generate coverage data for ctfe
+    d_bool nofloat;       // code should not pull in floating point support
+    d_bool ignoreUnsupportedPragmas;      // rather than error on them
+    d_bool useModuleInfo; // generate runtime module information
+    d_bool useTypeInfo;   // generate runtime type information
+    d_bool useExceptions; // support exception handling
+    d_bool noSharedAccess; // read/write access to shared memory objects
+    d_bool previewIn;     // `in` means `scope const`, perhaps `ref`, accepts rvalues
+    d_bool shortenedMethods; // allow => in normal function declarations
+    d_bool betterC;       // be a "better C" compiler; no dependency on D runtime
+    d_bool addMain;       // add a default main() function
+    d_bool allInst;       // generate code for all template instantiations
+    d_bool fix16997;      // fix integral promotions for unary + - ~ operators
                         // https://issues.dlang.org/show_bug.cgi?id=16997
-    bool fixAliasThis;  // if the current scope has an alias this, check it before searching upper scopes
-    bool inclusiveInContracts;   // 'in' contracts of overridden methods must be a superset of parent contract
-    bool ehnogc;        // use @nogc exception handling
+    d_bool fixAliasThis;  // if the current scope has an alias this, check it before searching upper scopes
+    d_bool inclusiveInContracts;   // 'in' contracts of overridden methods must be a superset of parent contract
+    d_bool ehnogc;        // use @nogc exception handling
     FeatureState dtorFields;  // destruct fields of partially constructed objects
                               // https://issues.dlang.org/show_bug.cgi?id=14246
-    bool fieldwise;         // do struct equality testing field-wise rather than by memcmp()
+    d_bool fieldwise;         // do struct equality testing field-wise rather than by memcmp()
     FeatureState rvalueRefParam;    // allow rvalues to be arguments to ref parameters
     CppStdRevision cplusplus;  // version of C++ name mangling to support
-    bool markdown;          // enable Markdown replacements in Ddoc
-    bool vmarkdown;         // list instances of Markdown replacements in Ddoc
-    bool showGaggedErrors;  // print gagged errors anyway
-    bool printErrorContext;  // print errors with the error context (the error line in the source file)
-    bool manual;            // open browser on compiler manual
-    bool usage;             // print usage and exit
-    bool mcpuUsage;         // print help on -mcpu switch
-    bool transitionUsage;   // print help on -transition switch
-    bool checkUsage;        // print help on -check switch
-    bool checkActionUsage;  // print help on -checkaction switch
-    bool revertUsage;       // print help on -revert switch
-    bool previewUsage;      // print help on -preview switch
-    bool externStdUsage;    // print help on -extern-std switch
-    bool hcUsage;           // print help on -HC switch
-    bool logo;              // print logo;
+    d_bool markdown;          // enable Markdown replacements in Ddoc
+    d_bool vmarkdown;         // list instances of Markdown replacements in Ddoc
+    d_bool showGaggedErrors;  // print gagged errors anyway
+    d_bool printErrorContext;  // print errors with the error context (the error line in the source file)
+    d_bool manual;            // open browser on compiler manual
+    d_bool usage;             // print usage and exit
+    d_bool mcpuUsage;         // print help on -mcpu switch
+    d_bool transitionUsage;   // print help on -transition switch
+    d_bool checkUsage;        // print help on -check switch
+    d_bool checkActionUsage;  // print help on -checkaction switch
+    d_bool revertUsage;       // print help on -revert switch
+    d_bool previewUsage;      // print help on -preview switch
+    d_bool externStdUsage;    // print help on -extern-std switch
+    d_bool hcUsage;           // print help on -HC switch
+    d_bool logo;              // print logo;
 
     CHECKENABLE useInvariants;     // generate class invariant checks
     CHECKENABLE useIn;             // generate precondition checks
@@ -185,21 +185,21 @@ struct Param
     DString objname;   // .obj file output name
     DString libname;   // .lib file output name
 
-    bool doDocComments;  // process embedded documentation comments
+    d_bool doDocComments;  // process embedded documentation comments
     DString docdir;      // write documentation file to docdir directory
     DString docname;     // write documentation file to docname
     Array<const char *> ddocfiles;  // macro include files for Ddoc
 
-    bool doHdrGeneration;  // process embedded documentation comments
+    d_bool doHdrGeneration;  // process embedded documentation comments
     DString hdrdir;        // write 'header' file to docdir directory
     DString hdrname;       // write 'header' file to docname
-    bool hdrStripPlainFunctions; // strip the bodies of plain (non-template) functions
+    d_bool hdrStripPlainFunctions; // strip the bodies of plain (non-template) functions
 
     CxxHeaderMode doCxxHdrGeneration;  // write 'Cxx header' file
     DString cxxhdrdir;        // write 'header' file to docdir directory
     DString cxxhdrname;       // write 'header' file to docname
 
-    bool doJsonGeneration;    // write JSON file
+    d_bool doJsonGeneration;    // write JSON file
     DString jsonfilename;     // write JSON file to jsonfilename
     unsigned jsonFieldFlags;  // JSON field flags to include
 
@@ -220,13 +220,13 @@ struct Param
     DString moduleDepsFile;     // filename for deps output
     OutBuffer *moduleDeps;      // contents to be written to deps file
 
-    bool emitMakeDeps;                // whether to emit makedeps
+    d_bool emitMakeDeps;                // whether to emit makedeps
     DString makeDepsFile;             // filename for makedeps output
     Array<const char *> makeDeps;     // dependencies for makedeps
 
     MessageStyle messageStyle;  // style of file/line annotations on messages
 
-    bool run;           // run resulting executable
+    d_bool run;           // run resulting executable
     Strings runargs;    // arguments for executable
 
     // Linker stuff
@@ -244,7 +244,7 @@ struct Param
 struct structalign_t
 {
     unsigned short value;
-    bool pack;
+    d_bool pack;
 
     bool isDefault() const;
     void setDefault();
@@ -291,7 +291,7 @@ struct Global
     Array<class Identifier*>* versionids; // command line versions and predefined versions
     Array<class Identifier*>* debugids;   // command line debug versions and predefined versions
 
-    bool hasMainFunction;
+    d_bool hasMainFunction;
     unsigned varSequenceNumber;
 
     FileManager* fileManager;

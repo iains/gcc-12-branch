@@ -326,7 +326,7 @@ class DsymbolExp : public Expression
 {
 public:
     Dsymbol *s;
-    bool hasOverloads;
+    d_bool hasOverloads;
 
     DsymbolExp *syntaxCopy();
     bool isLvalue();
@@ -470,8 +470,8 @@ public:
      */
     int stageflags;
 
-    bool useStaticInit;         // if this is true, use the StructDeclaration's init symbol
-    bool isOriginal;            // used when moving instances to indicate `this is this.origin`
+    d_bool useStaticInit;         // if this is true, use the StructDeclaration's init symbol
+    d_bool isOriginal;            // used when moving instances to indicate `this is this.origin`
     OwnedBy ownedByCtfe;
 
     static StructLiteralExp *create(const Loc &loc, StructDeclaration *sd, void *elements, Type *stype = NULL);
@@ -530,8 +530,8 @@ public:
     Expression *argprefix;      // expression to be evaluated just before arguments[]
 
     CtorDeclaration *member;    // constructor function
-    bool onstack;               // allocate on stack
-    bool thrownew;              // this NewExp is the expression of a ThrowStatement
+    d_bool onstack;               // allocate on stack
+    d_bool thrownew;              // this NewExp is the expression of a ThrowStatement
 
     static NewExp *create(const Loc &loc, Expression *thisexp, Type *newtype, Expressions *arguments);
     NewExp *syntaxCopy();
@@ -557,7 +557,7 @@ class SymbolExp : public Expression
 public:
     Declaration *var;
     Dsymbol *originalScope;
-    bool hasOverloads;
+    d_bool hasOverloads;
 
     void accept(Visitor *v) { v->visit(this); }
 };
@@ -579,7 +579,7 @@ public:
 class VarExp : public SymbolExp
 {
 public:
-    bool delegateWasExtracted;
+    d_bool delegateWasExtracted;
     static VarExp *create(const Loc &loc, Declaration *var, bool hasOverloads = true);
     bool equals(const RootObject *o) const;
     bool isLvalue();
@@ -755,9 +755,9 @@ class DotIdExp : public UnaExp
 {
 public:
     Identifier *ident;
-    bool noderef;       // true if the result of the expression will never be dereferenced
-    bool wantsym;       // do not replace Symbol with its initializer during semantic()
-    bool arrow;         // ImportC: if -> instead of .
+    d_bool noderef;       // true if the result of the expression will never be dereferenced
+    d_bool wantsym;       // do not replace Symbol with its initializer during semantic()
+    d_bool arrow;         // ImportC: if -> instead of .
 
     static DotIdExp *create(const Loc &loc, Expression *e, Identifier *ident);
     void accept(Visitor *v) { v->visit(this); }
@@ -777,7 +777,7 @@ class DotVarExp : public UnaExp
 {
 public:
     Declaration *var;
-    bool hasOverloads;
+    d_bool hasOverloads;
 
     bool isLvalue();
     Expression *toLvalue(Scope *sc, Expression *e);
@@ -801,7 +801,7 @@ class DelegateExp : public UnaExp
 {
 public:
     FuncDeclaration *func;
-    bool hasOverloads;
+    d_bool hasOverloads;
     VarDeclaration *vthis2;  // container for multi-context
 
 
@@ -821,9 +821,9 @@ class CallExp : public UnaExp
 public:
     Expressions *arguments;     // function arguments
     FuncDeclaration *f;         // symbol to call
-    bool directcall;            // true if a virtual call is devirtualized
-    bool inDebugStatement;      // true if this was in a debug statement
-    bool ignoreAttributes;      // don't enforce attributes (e.g. call @gc function in @nogc code)
+    d_bool directcall;            // true if a virtual call is devirtualized
+    d_bool inDebugStatement;      // true if this was in a debug statement
+    d_bool ignoreAttributes;      // don't enforce attributes (e.g. call @gc function in @nogc code)
     VarDeclaration *vthis2;     // container for multi-context
 
     static CallExp *create(const Loc &loc, Expression *e, Expressions *exps);
@@ -882,7 +882,7 @@ public:
 class DeleteExp : public UnaExp
 {
 public:
-    bool isRAII;
+    d_bool isRAII;
     void accept(Visitor *v) { v->visit(this); }
 };
 
@@ -927,9 +927,9 @@ public:
     Expression *upr;            // NULL if implicit 0
     Expression *lwr;            // NULL if implicit [length - 1]
     VarDeclaration *lengthVar;
-    bool upperIsInBounds;       // true if upr <= e1.length
-    bool lowerIsLessThanUpper;  // true if lwr <= upr
-    bool arrayop;               // an array operation, rather than a slice
+    d_bool upperIsInBounds;       // true if upr <= e1.length
+    d_bool lowerIsLessThanUpper;  // true if lwr <= upr
+    d_bool arrayop;               // an array operation, rather than a slice
 
     SliceExp *syntaxCopy();
     bool isLvalue();
@@ -1001,8 +1001,8 @@ public:
 class CommaExp : public BinExp
 {
 public:
-    bool isGenerated;
-    bool allowCommaExp;
+    d_bool isGenerated;
+    d_bool allowCommaExp;
     bool isLvalue();
     Expression *toLvalue(Scope *sc, Expression *e);
     Expression *modifiableLvalue(Scope *sc, Expression *e);
@@ -1015,8 +1015,8 @@ class IndexExp : public BinExp
 {
 public:
     VarDeclaration *lengthVar;
-    bool modifiable;
-    bool indexIsInBounds;       // true if 0 <= e2 && e2 <= e1.length - 1
+    d_bool modifiable;
+    d_bool indexIsInBounds;       // true if 0 <= e2 && e2 <= e1.length - 1
 
     IndexExp *syntaxCopy();
     bool isLvalue();

@@ -584,7 +584,7 @@ struct ParameterList
     Parameters* parameters;
     StorageClass stc;
     VarArg varargs;
-    bool hasIdentifierList; // true if C identifier-list style
+    d_bool hasIdentifierList; // true if C identifier-list style
 
     size_t length();
     Parameter *operator[](size_t i) { return Parameter::getNth(parameters, i); }
@@ -774,7 +774,7 @@ class TypeStruct : public Type
 public:
     StructDeclaration *sym;
     AliasThisRec att;
-    bool inuse;
+    d_bool inuse;
 
     static TypeStruct *create(StructDeclaration *sym);
     const char *kind();

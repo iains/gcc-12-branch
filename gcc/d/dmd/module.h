@@ -75,8 +75,8 @@ public:
     unsigned errors;    // if any errors in file
     unsigned numlines;  // number of lines in source file
     FileType filetype;  // source file type
-    bool hasAlwaysInlines; // contains references to functions that must be inlined
-    bool isPackageFile; // if it is a package.d
+    d_bool hasAlwaysInlines; // contains references to functions that must be inlined
+    d_bool isPackageFile; // if it is a package.d
     Package *pkg;       // if isPackageFile is true, the Package that contains this package.d
     Strings contentImportedFiles;  // array of files whose content was imported
     int needmoduleinfo;
@@ -165,7 +165,7 @@ struct ModuleDeclaration
     Loc loc;
     Identifier *id;
     DArray<Identifier*> packages;  // array of Identifier's representing packages
-    bool isdeprecated;  // if it is a deprecated module
+    d_bool isdeprecated;  // if it is a deprecated module
     Expression *msg;
 
     const char *toChars() const;

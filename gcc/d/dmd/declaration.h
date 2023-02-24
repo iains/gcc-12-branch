@@ -165,7 +165,7 @@ class TupleDeclaration : public Declaration
 {
 public:
     Objects *objects;
-    bool isexp;                 // true: expression tuple
+    d_bool isexp;                 // true: expression tuple
 
     TypeTuple *tupletype;       // !=NULL if this is a type tuple
 
@@ -598,7 +598,7 @@ public:
 
     // set if someone took the address of this function
     int tookAddressOf;
-    bool requiresClosure;               // this function needs a closure
+    d_bool requiresClosure;               // this function needs a closure
 
     // local variables in this function which are referenced by nested functions
     VarDeclarations closureVars;
@@ -699,7 +699,7 @@ class FuncAliasDeclaration : public FuncDeclaration
 {
 public:
     FuncDeclaration *funcalias;
-    bool hasOverloads;
+    d_bool hasOverloads;
 
     FuncAliasDeclaration *isFuncAliasDeclaration() { return this; }
     const char *kind() const;
@@ -715,7 +715,7 @@ public:
     Type *treq;                         // target of return type inference
 
     // backend
-    bool deferToObj;
+    d_bool deferToObj;
 
     FuncLiteralDeclaration *syntaxCopy(Dsymbol *);
     bool isNested() const;
@@ -735,7 +735,7 @@ public:
 class CtorDeclaration : public FuncDeclaration
 {
 public:
-    bool isCpCtor;
+    d_bool isCpCtor;
     CtorDeclaration *syntaxCopy(Dsymbol *);
     const char *kind() const;
     const char *toChars() const;

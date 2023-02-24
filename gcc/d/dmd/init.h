@@ -75,7 +75,7 @@ public:
     Initializers value; // of Initializer *'s
     unsigned dim;       // length of array being initialized
     Type *type;         // type that array will be used to initialize
-    bool sem;           // true if semantic() is run
+    d_bool sem;           // true if semantic() is run
 
     bool isAssociativeArray() const;
     Expression *toAssocArrayLiteral();
@@ -86,7 +86,7 @@ public:
 class ExpInitializer : public Initializer
 {
 public:
-    bool expandTuples;
+    d_bool expandTuples;
     Expression *exp;
 
     void accept(Visitor *v) { v->visit(this); }
@@ -109,7 +109,7 @@ class CInitializer : public Initializer
 public:
     DesigInits initializerList;
     Type *type;         // type that array will be used to initialize
-    bool sem;           // true if semantic() is run
+    d_bool sem;           // true if semantic() is run
 
     void accept(Visitor *v) { v->visit(this); }
 };

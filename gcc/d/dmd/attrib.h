@@ -133,7 +133,7 @@ public:
 class AnonDeclaration : public AttribDeclaration
 {
 public:
-    bool isunion;
+    d_bool isunion;
     int sem;                    // 1 if successful semantic()
     unsigned anonoffset;        // offset of anonymous struct
     unsigned anonstructsize;    // size of anonymous struct
@@ -177,8 +177,8 @@ class StaticIfDeclaration : public ConditionalDeclaration
 {
 public:
     ScopeDsymbol *scopesym;
-    bool addisdone;
-    bool onStack;
+    d_bool addisdone;
+    d_bool onStack;
 
     StaticIfDeclaration *syntaxCopy(Dsymbol *s);
     Dsymbols *include(Scope *sc);
@@ -194,8 +194,8 @@ class StaticForeachDeclaration : public AttribDeclaration
 public:
     StaticForeach *sfe;
     ScopeDsymbol *scopesym;
-    bool onStack;
-    bool cached;
+    d_bool onStack;
+    d_bool cached;
     Dsymbols *cache;
 
     StaticForeachDeclaration *syntaxCopy(Dsymbol *s);
@@ -228,7 +228,7 @@ public:
     Expressions *exps;
 
     ScopeDsymbol *scopesym;
-    bool compiled;
+    d_bool compiled;
 
     CompileDeclaration *syntaxCopy(Dsymbol *s);
     void addMember(Scope *sc, ScopeDsymbol *sds);
