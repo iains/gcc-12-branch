@@ -28,6 +28,9 @@ const char *objc_printable_name (tree, int);
 int objc_gimplify_expr (tree *, gimple_seq *, gimple_seq *);
 void objc_common_init_ts (void);
 
+/* Register features common to Objective-C and Objective-C++.  */
+void objc_common_register_features ();
+
 /* NB: The remaining public functions are prototyped in c-common.h, for the
    benefit of stub-objc.cc and objc-act.cc.  */
 

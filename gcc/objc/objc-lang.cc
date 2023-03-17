@@ -50,6 +50,16 @@ enum c_language_kind c_language = clk_objc;
 /* Each front end provides its own lang hook initializer.  */
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
+/* Implement c-family hook to add language-specific features
+   for __has_{feature,extension}.  */
+
+void
+c_family_register_lang_features ()
+{
+  objc_common_register_features ();
+  c_register_features ();
+}
+
 /* Lang hook routines common to C and ObjC appear in c-objc-common.cc;
    there should be very few (if any) routines below.  */
 

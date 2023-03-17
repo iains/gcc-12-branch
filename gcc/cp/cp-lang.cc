@@ -118,6 +118,15 @@ objcp_tsubst_copy_and_build (tree /*t*/,
   return NULL_TREE;
 }
 
+/* Implement c-family hook to add language-specific features
+   for __has_{feature,extension}.  */
+
+void
+c_family_register_lang_features ()
+{
+  cp_register_features ();
+}
+
 static const char *
 cxx_dwarf_name (tree t, int verbosity)
 {

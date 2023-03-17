@@ -49,6 +49,15 @@ enum c_language_kind c_language = clk_c;
 /* Each front end provides its own lang hook initializer.  */
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
+/* Implement c-family hook to register language-specific features for
+   __has_{feature,extension}.  */
+
+void
+c_family_register_lang_features ()
+{
+  c_register_features ();
+}
+
 #if CHECKING_P
 
 namespace selftest {
