@@ -1,5 +1,6 @@
 /* { dg-do compile } */
 /* { dg-options "-O2 -save-temps" } */
+/* { dg-skip-if "Darwin ABI is different, test separately" { *-*-darwin* } } */
 
 #define ALIGN 16
 #define EXTRA
