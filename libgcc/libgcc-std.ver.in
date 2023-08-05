@@ -1944,3 +1944,9 @@ GCC_7.0.0 {
   __PFX__divmoddi4
   __PFX__divmodti4
 }
+
+%inherit GCC_14.0.0 GCC_7.0.0
+GCC_14.0.0 {
+  __gcc_nested_func_ptr_created
+  __gcc_nested_func_ptr_deleted
+}

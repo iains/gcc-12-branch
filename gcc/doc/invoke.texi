@@ -681,7 +681,7 @@ Objective-C and Objective-C++ Dialects}.
 -fverbose-asm  -fpack-struct[=@var{n}]  @gol
 -fleading-underscore  -ftls-model=@var{model} @gol
 -fstack-reuse=@var{reuse_level} @gol
--ftrampolines  -ftrapv  -fwrapv @gol
+-ftrampolines -ftrampoline-impl=@r{[}stack@r{|}heap@r{]} -ftrapv  -fwrapv @gol
 -fvisibility=@r{[}default@r{|}internal@r{|}hidden@r{|}protected@r{]} @gol
 -fstrict-volatile-bitfields  -fsync-libcalls}
 
@@ -17612,6 +17612,21 @@ For languages other than Ada, the @code{-ftrampolines} and
 trampolines are always generated on platforms that need them
 for nested functions.
 
+@opindex ftrampoline-impl
+@item -ftrampoline-impl=@r{[}stack@r{|}heap@r{]}
+By default, trampolines are generated on stack.  However, certain platforms
+(such as the Apple M1) do not permit an executable stack.  Compiling with
+@option{-ftrampoline-impl=heap} generate calls to
+@code{__gcc_nested_func_ptr_created} and
+@code{__gcc_nested_func_ptr_deleted} in order to allocate and
+deallocate trampoline space on the executable heap.  These functions are
+implemented in libgcc, and will only be provided on specific targets:
+x86_64 Darwin, x86_64 and aarch64 Linux.  @emph{PLEASE NOTE}: Heap
+trampolines are @emph{not} guaranteed to be correctly deallocated if you
+@code{setjmp}, instantiate nested functions, and then @code{longjmp} back
+to a state prior to having allocated those nested functions.
+
+@opindex fvisibility
 @item -fvisibility=@r{[}default@r{|}internal@r{|}hidden@r{|}protected@r{]}
 @opindex fvisibility
 Set the default ELF image symbol visibility to the specified option---all

@@ -315,7 +315,8 @@ extern GTY(()) int darwin_ms_struct;
 # define DARWIN_SHARED_LIBGCC \
 "%:version-compare(!> 10.11 mmacosx-version-min= -lgcc_s.1.1)"
 # define DARWIN_SHARED_WEAK_ADDS \
-"; %:version-compare(>= 10.11 mmacosx-version-min= -lemutls_w)"
+"%{%:version-compare(>= 10.11 mmacosx-version-min= -lemutls_w): \
+ " DARWIN_HEAP_T_LIB "}"
 #endif
 
 
@@ -557,10 +558,11 @@ extern GTY(()) int darwin_ms_struct;
 
 #define DARWIN_WEAK_CRTS \
 "%{static-libgcc|static:						  \
-   %:version-compare(>= 10.6 mmacosx-version-min= -lemutls_w) ; \
+    %{%:version-compare(>= 10.6 mmacosx-version-min= -lemutls_w):	  \
+      " DARWIN_HEAP_T_LIB "} ;						  \
    shared-libgcc|fexceptions|fobjc-exceptions|fgnu-runtime: " \
      DARWIN_SHARED_WEAK_ADDS " ; \
-   : -lemutls_w \
+   : -lemutls_w " DARWIN_HEAP_T_LIB " \
   }"
 
 /* We specify crt0.o as -lcrt0.o so that ld will search the library path.  */

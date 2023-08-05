@@ -9795,6 +9795,28 @@ build_common_builtin_nodes (void)
 			"__builtin_nonlocal_goto",
 			ECF_NORETURN | ECF_NOTHROW);
 
+  tree ptr_ptr_type_node = build_pointer_type (ptr_type_node);
+
+  if (!builtin_decl_explicit_p (BUILT_IN_GCC_NESTED_PTR_CREATED))
+    {
+      ftype = build_function_type_list (void_type_node,
+					ptr_type_node, // void *chain
+					ptr_type_node, // void *func
+					ptr_ptr_type_node, // void **dst
+					NULL_TREE);
+      local_define_builtin ("__builtin___gcc_nested_func_ptr_created", ftype,
+			    BUILT_IN_GCC_NESTED_PTR_CREATED,
+			    "__gcc_nested_func_ptr_created", ECF_NOTHROW);
+    }
+
+  if (!builtin_decl_explicit_p (BUILT_IN_GCC_NESTED_PTR_DELETED))
+    {
+      ftype = build_function_type_list (void_type_node, NULL_TREE);
+      local_define_builtin ("__builtin___gcc_nested_func_ptr_deleted", ftype,
+			    BUILT_IN_GCC_NESTED_PTR_DELETED,
+			    "__gcc_nested_func_ptr_deleted", ECF_NOTHROW);
+    }
+
   ftype = build_function_type_list (void_type_node,
 				    ptr_type_node, ptr_type_node, NULL_TREE);
   local_define_builtin ("__builtin_setjmp_setup", ftype,
