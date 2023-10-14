@@ -1,4 +1,5 @@
 /* { dg-options "-O2 -fstack-clash-protection -fomit-frame-pointer --param stack-clash-protection-guard-size=12" } */
+/* { dg-skip-if "incompatible stack layout" { *-*-darwin* } } */
 /* { dg-final { check-function-bodies "**" "" } } */
 
 void f(int, ...);
