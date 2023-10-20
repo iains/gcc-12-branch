@@ -6,7 +6,8 @@ int main ()
   return 0;
 }
 
-/* { dg-final { scan-assembler-times {\.arch armv8\.2\-a\+crypto\+crc} 1 } } */
+/* { dg-final { scan-assembler-times {\.arch armv8\.2\-a\+crypto\+crc} 1 { target { ! *-*-darwin* } } } } */
+/* { dg-final { scan-assembler-times {\.arch armv8\.2\-a\+crypto} 1 { target *-*-darwin* } } } */
 
 /* Group as a whole was requested to be turned on, crypto itself is a bit and so
    just turning off one feature can't turn it off.   */
