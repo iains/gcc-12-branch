@@ -421,6 +421,7 @@ aarch64_get_extension_string_for_isa_flags (uint64_t isa_flags,
       we just mask all default bits away at the end.  */
    isa_flag_bits &= ~default_arch_flags;
 
+#ifndef DISABLE_AARCH64_AS_CRC_BUGFIX
    /* We now have the smallest set of features we need to process.  A subsequent
       linear scan of the bits in isa_flag_bits will allow us to print the ext
       names.  However as a special case if CRC was enabled before, always print
@@ -432,6 +433,7 @@ aarch64_get_extension_string_for_isa_flags (uint64_t isa_flags,
       issue, so we don't need this fix when targeting Armv8-R.  */
   if ((isa_flags & AARCH64_ISA_CRC) && !AARCH64_ISA_V8_R)
     isa_flag_bits |= AARCH64_ISA_CRC;
+#endif
 
   /* Pass Two:
      Print the option names that we're sure we must turn on.  These are only
