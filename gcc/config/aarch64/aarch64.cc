@@ -7344,7 +7344,7 @@ aarch64_function_arg_alignment (machine_mode mode, const_tree type,
   if (integer_zerop (TYPE_SIZE (type)))
     return 0;
 
-  gcc_assert (TYPE_MODE (type) == mode);
+  gcc_assert (TARGET_MACHO || TYPE_MODE (type) == mode);
 
   if (!AGGREGATE_TYPE_P (type))
     {
@@ -7434,8 +7434,7 @@ aarch64_layout_arg (cumulative_args_t pcum_v, const function_arg_info &arg)
     {
       /* Set suitable defaults for queries.  */
       pcum->darwinpcs_arg_boundary
-	= aarch64_function_arg_alignment (mode, type, &abi_break_gcc_9,
-					  &abi_break_gcc_13, &abi_break_gcc_14);
+	= aarch64_function_arg_alignment (mode, type, &abi_break);
       pcum->darwinpcs_arg_padding = BITS_PER_UNIT;
     }
 
@@ -7823,6 +7822,7 @@ aarch64_init_cumulative_args (CUMULATIVE_ARGS *pcum,
   pcum->named_p = pcum->darwinpcs_n_named != 0;
   pcum->last_named_p = pcum->darwinpcs_n_named == 1;
   pcum->silent_p = silent_p;
+  pcum->aapcs_vfp_rmode = VOIDmode;
 
   if (!silent_p
       && !TARGET_FLOAT
@@ -7941,12 +7941,9 @@ aarch64_function_arg_boundary_ca (machine_mode mode ATTRIBUTE_UNUSED,
 				  const_tree type ATTRIBUTE_UNUSED,
 				  cumulative_args_t ca ATTRIBUTE_UNUSED)
 {
-  unsigned int abi_break_gcc_9;
-  unsigned int abi_break_gcc_13;
-  unsigned int abi_break_gcc_14;
-  unsigned int alignment
-    = aarch64_function_arg_alignment (mode, type, &abi_break_gcc_9,
-				      &abi_break_gcc_13, &abi_break_gcc_14);
+  unsigned int abi_break;
+  unsigned int alignment = aarch64_function_arg_alignment (mode, type,
+							   &abi_break);
   /* We rely on aarch64_layout_arg and aarch64_gimplify_va_arg_expr
      to emit warnings about ABI incompatibility.  */
 #if TARGET_MACHO
@@ -13069,6 +13066,26 @@ aarch64_secondary_reload (bool in_p ATTRIBUTE_UNUSED, rtx x,
 
   return NO_REGS;
 }
+
+#if TARGET_MACHO
+/* Implement TARGET_FRAME_POINTER_REQUIRED.  */
+
+static bool
+aarch64_darwin_frame_pointer_required ()
+{
+  if (crtl->calls_eh_return)
+    return true;
+
+  /* Not used in leaf functions (unless forced).  */
+  if (flag_omit_leaf_frame_pointer && leaf_function_p ())
+    return false;
+
+  /* NOTE: We are allowing the user to force omission of the frame
+     pointer, (despite that it is not ABI-compliant).  */
+
+  return flag_omit_frame_pointer != 1;
+}
+#endif
 
 static bool
 aarch64_can_eliminate (const int from ATTRIBUTE_UNUSED, const int to)
@@ -27966,6 +27983,60 @@ aarch64_indirect_call_asm (rtx addr)
   return "";
 }
 
+#if TARGET_MACHO
+/* This handles the promotion of function return values.
+   It also handles function args under two specific curcumstances:
+     - called from combine with a register argument
+     - caller for a libcall with type == NULL.
+   The remaining cases for argument promotion are handled with access to
+   cumulative args data, below.  */
+machine_mode
+aarch64_darwin_promote_fn_mode (const_tree type, machine_mode mode,
+			       int *punsignedp,
+			       const_tree funtype ATTRIBUTE_UNUSED,
+			       int for_return ATTRIBUTE_UNUSED)
+{
+  /* With the amended use of promote using cargs, the only cases that arrive
+     here with for_return == 0 are from combine (where the value is definitely
+     in a register) and for libcalls, where type == NULL.  We want to promote
+     function return values in the callee, so this becomes pretty much
+     unconditional now.  */
+  if (type != NULL_TREE)
+    return promote_mode (type, mode, punsignedp);
+  return mode;
+}
+
+/* Ensure that we only promote the mode of named parms when they are passed in
+   a register.  Named values passed on the stack retain their original mode and
+   alignment.  */
+machine_mode
+aarch64_darwin_promote_function_mode_ca (cumulative_args_t ca,
+					 function_arg_info arg,
+					 const_tree funtype ATTRIBUTE_UNUSED,
+					 int *punsignedp,
+					 int for_return ATTRIBUTE_UNUSED)
+{
+  tree type = arg.type;
+  machine_mode mode = arg.mode;
+  machine_mode new_mode = promote_mode (type, mode, punsignedp);
+  if (new_mode == mode || arg.named == false
+      || GET_MODE_CLASS (new_mode) != MODE_INT
+      || known_gt (GET_MODE_SIZE (new_mode), 4))
+    return new_mode;
+
+  CUMULATIVE_ARGS *pcum = get_cumulative_args (ca);
+  /* Make sure that changes in assumption do not get missed.  */
+  gcc_checking_assert (for_return == 0 && new_mode == SImode
+		       && !pcum->aapcs_arg_processed);
+  /* We have a named integer value that fits in a reg; if there's one available
+     then promote the value.  */
+  if (pcum->aapcs_ncrn < 8)
+    return new_mode;
+  return mode;
+}
+
+#endif
+
 /* Target-specific selftests.  */
 
 #if CHECKING_P
@@ -28642,6 +28713,11 @@ aarch64_libgcc_floating_mode_supported_p
 
 #undef TARGET_HAVE_SHADOW_CALL_STACK
 #define TARGET_HAVE_SHADOW_CALL_STACK true
+
+#if TARGET_MACHO
+#undef TARGET_FRAME_POINTER_REQUIRED
+#define TARGET_FRAME_POINTER_REQUIRED aarch64_darwin_frame_pointer_required
+#endif
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 
