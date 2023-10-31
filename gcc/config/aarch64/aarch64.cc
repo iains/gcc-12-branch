@@ -4061,8 +4061,10 @@ static bool
 aarch64_takes_arguments_in_sve_regs_p (const_tree fntype)
 {
   CUMULATIVE_ARGS args_so_far_v;
+  /* This does not apply to variadic functions, so all the (currently
+     uncounted) arguments must be named.  */
   aarch64_init_cumulative_args (&args_so_far_v, NULL_TREE, NULL_RTX,
-				NULL_TREE, 0, true);
+				NULL_TREE, -1, true);
   cumulative_args_t args_so_far = pack_cumulative_args (&args_so_far_v);
 
   for (tree chain = TYPE_ARG_TYPES (fntype);
@@ -7312,6 +7314,7 @@ aarch64_return_in_memory (const_tree type, const_tree fndecl ATTRIBUTE_UNUSED)
   gcc_unreachable ();
 }
 
+#if !TARGET_MACHO
 static bool
 aarch64_vfp_is_call_candidate (cumulative_args_t pcum_v, machine_mode mode,
 			       const_tree type, int *nregs)
@@ -7321,6 +7324,7 @@ aarch64_vfp_is_call_candidate (cumulative_args_t pcum_v, machine_mode mode,
 						  &pcum->aapcs_vfp_rmode,
 						  nregs, NULL, pcum->silent_p);
 }
+#endif
 
 /* Given MODE and TYPE of a function argument, return the alignment in
    bits.  The idea is to suppress any stronger alignment requested by
@@ -7426,6 +7430,14 @@ aarch64_layout_arg (cumulative_args_t pcum_v, const function_arg_info &arg)
   gcc_assert (!alignment || abi_break < alignment);
 
   pcum->aapcs_arg_processed = true;
+  if (TARGET_MACHO)
+    {
+      /* Set suitable defaults for queries.  */
+      pcum->darwinpcs_arg_boundary
+	= aarch64_function_arg_alignment (mode, type, &abi_break_gcc_9,
+					  &abi_break_gcc_13, &abi_break_gcc_14);
+      pcum->darwinpcs_arg_padding = BITS_PER_UNIT;
+    }
 
   pure_scalable_type_info pst_info;
   if (type && pst_info.analyze_registers (type))
@@ -7485,13 +7497,29 @@ aarch64_layout_arg (cumulative_args_t pcum_v, const function_arg_info &arg)
     /* No frontends can create types with variable-sized modes, so we
        shouldn't be asked to pass or return them.  */
     size = GET_MODE_SIZE (mode).to_constant ();
+
+  if (TARGET_MACHO)
+    /* Since we can pack things on the stack, we need the unrounded size.  */
+    pcum->darwinpcs_stack_bytes = size;
+
   size = ROUND_UP (size, UNITS_PER_WORD);
 
   allocate_ncrn = (type) ? !(FLOAT_TYPE_P (type)) : !FLOAT_MODE_P (mode);
+  bool is_ha = false;
+#if !TARGET_MACHO
   allocate_nvrn = aarch64_vfp_is_call_candidate (pcum_v,
 						 mode,
 						 type,
 						 &nregs);
+#else
+  /* We care if the value is a homogenous aggregate when laying out the stack,
+     so use this call directly.  */
+  allocate_nvrn
+    = aarch64_vfp_is_call_or_return_candidate (mode, type,
+						&pcum->aapcs_vfp_rmode,
+						&nregs, &is_ha,
+						pcum->silent_p);
+#endif
   gcc_assert (!sve_p || !allocate_nvrn);
 
   /* allocate_ncrn may be false-positive, but allocate_nvrn is quite reliable.
@@ -7508,7 +7536,13 @@ aarch64_layout_arg (cumulative_args_t pcum_v, const function_arg_info &arg)
       if (!pcum->silent_p && !TARGET_FLOAT)
 	aarch64_err_no_fpadvsimd (mode);
 
-      if (nvrn + nregs <= NUM_FP_ARG_REGS)
+      if (TARGET_MACHO
+	  && !arg.named)
+	{
+	  pcum->aapcs_nextnvrn = NUM_FP_ARG_REGS;
+	  goto on_stack;
+	}
+      else if (nvrn + nregs <= NUM_FP_ARG_REGS)
 	{
 	  pcum->aapcs_nextnvrn = nvrn + nregs;
 	  if (!aarch64_composite_type_p (type, mode))
@@ -7538,6 +7572,7 @@ aarch64_layout_arg (cumulative_args_t pcum_v, const function_arg_info &arg)
 		}
 	      pcum->aapcs_reg = par;
 	    }
+	  pcum->darwinpcs_stack_bytes = 0;
 	  return;
 	}
       else
@@ -7554,9 +7589,17 @@ aarch64_layout_arg (cumulative_args_t pcum_v, const function_arg_info &arg)
   /* C6 - C9.  though the sign and zero extension semantics are
      handled elsewhere.  This is the case where the argument fits
      entirely general registers.  */
+
   if (allocate_ncrn && (ncrn + nregs <= NUM_ARG_REGS))
     {
       gcc_assert (nregs == 0 || nregs == 1 || nregs == 2);
+
+      if (TARGET_MACHO
+	  && !arg.named)
+	{
+	  pcum->aapcs_nextncrn = NUM_ARG_REGS;
+	  goto on_stack;
+	}
 
       /* C.8 if the argument has an alignment of 16 then the NGRN is
 	 rounded up to the next even number.  */
@@ -7615,8 +7658,8 @@ aarch64_layout_arg (cumulative_args_t pcum_v, const function_arg_info &arg)
 	    }
 	  pcum->aapcs_reg = par;
 	}
-
       pcum->aapcs_nextncrn = ncrn + nregs;
+      pcum->darwinpcs_stack_bytes = 0;
       return;
     }
 
@@ -7759,6 +7802,26 @@ aarch64_init_cumulative_args (CUMULATIVE_ARGS *pcum,
   pcum->aapcs_arg_processed = false;
   pcum->aapcs_stack_words = 0;
   pcum->aapcs_stack_size = 0;
+  pcum->darwinpcs_stack_bytes = 0;
+  pcum->darwinpcs_sub_word_offset = 0;
+  pcum->darwinpcs_sub_word_pos = 0;
+  pcum->darwinpcs_arg_boundary = BITS_PER_UNIT;
+  pcum->darwinpcs_arg_padding = BITS_PER_UNIT;
+  /* If we have been invoked for incoming args, then n_named will have been
+     set to -1, but we should have a function decl - so pick up the named
+     count from that.  If that fails, and we end up with -1, this effectively
+     corresponds to assuming that there is an arbitrary number of named
+     args.  */
+  pcum->darwinpcs_n_named = n_named;
+  if (n_named == (unsigned)-1 && fndecl)
+    {
+      tree fnt = TREE_TYPE (fndecl);
+      if (fnt && TYPE_ARG_TYPES (fnt))
+	pcum->darwinpcs_n_named = list_length (TYPE_ARG_TYPES (fnt));
+    }
+  pcum->darwinpcs_n_args_processed = 0;
+  pcum->named_p = pcum->darwinpcs_n_named != 0;
+  pcum->last_named_p = pcum->darwinpcs_n_named == 1;
   pcum->silent_p = silent_p;
 
   if (!silent_p
@@ -7798,8 +7861,10 @@ aarch64_function_arg_advance (cumulative_args_t pcum_v,
       || pcum->pcs_variant == ARM_PCS_SVE)
     {
       aarch64_layout_arg (pcum_v, arg);
-      gcc_assert ((pcum->aapcs_reg != NULL_RTX)
-		  != (pcum->aapcs_stack_words != 0));
+      pcum->darwinpcs_n_args_processed++;
+      gcc_assert (TARGET_MACHO
+		  || (pcum->aapcs_reg != NULL_RTX)
+		      != (pcum->aapcs_stack_words != 0));
       pcum->aapcs_arg_processed = false;
       pcum->aapcs_ncrn = pcum->aapcs_nextncrn;
       pcum->aapcs_nvrn = pcum->aapcs_nextnvrn;
@@ -7807,6 +7872,12 @@ aarch64_function_arg_advance (cumulative_args_t pcum_v,
       pcum->aapcs_stack_size += pcum->aapcs_stack_words;
       pcum->aapcs_stack_words = 0;
       pcum->aapcs_reg = NULL_RTX;
+      pcum->darwinpcs_arg_boundary = BITS_PER_UNIT;
+      pcum->darwinpcs_arg_padding = BITS_PER_UNIT;
+      pcum->named_p
+	= pcum->darwinpcs_n_args_processed < pcum->darwinpcs_n_named;
+      pcum->last_named_p
+	= pcum->darwinpcs_n_args_processed + 1 == pcum->darwinpcs_n_named;
     }
 }
 
@@ -7817,12 +7888,15 @@ aarch64_function_arg_regno_p (unsigned regno)
 	  || (FP_REGNUM_P (regno) && regno < V0_REGNUM + NUM_FP_ARG_REGS));
 }
 
-/* Implement FUNCTION_ARG_BOUNDARY.  Every parameter gets at least
-   PARM_BOUNDARY bits of alignment, but will be given anything up
-   to STACK_BOUNDARY bits if the type requires it.  This makes sure
-   that both before and after the layout of each argument, the Next
-   Stacked Argument Address (NSAA) will have a minimum alignment of
-   8 bytes.  */
+/* Implement FUNCTION_ARG_BOUNDARY.
+   For AAPCS64, Every parameter gets at least PARM_BOUNDARY bits of
+   alignment, but will be given anything up to STACK_BOUNDARY bits
+   if the type requires it.  This makes sure that both before and after
+   the layout of each argument, the Next Stacked Argument Address (NSAA)
+   will have a minimum alignment of 8 bytes.
+
+   For darwinpcs, this is only called to lower va_arg entries which are
+   always aligned as for AAPCS64.  */
 
 static unsigned int
 aarch64_function_arg_boundary (machine_mode mode, const_tree type)
@@ -7830,6 +7904,22 @@ aarch64_function_arg_boundary (machine_mode mode, const_tree type)
   unsigned int abi_break;
   unsigned int alignment = aarch64_function_arg_alignment (mode, type,
 							   &abi_break);
+  /* We rely on aarch64_layout_arg and aarch64_gimplify_va_arg_expr
+     to emit warnings about ABI incompatibility.  */
+#if TARGET_MACHO
+  /* This can only work for unnamed args.  */
+  machine_mode comp_mode = VOIDmode;
+  int nregs;
+  bool is_ha;
+  aarch64_vfp_is_call_or_return_candidate (mode, type, &comp_mode, &nregs,
+					   &is_ha, /*silent*/true);
+  if (TREE_CODE (type) == COMPLEX_TYPE
+      || (TREE_CODE (type) == RECORD_TYPE
+	  && !is_ha && !SCALAR_FLOAT_MODE_P (comp_mode))
+      || TREE_CODE (type) == UNION_TYPE)
+    return MIN (MAX (alignment, PARM_BOUNDARY), STACK_BOUNDARY);
+  return MIN (alignment, STACK_BOUNDARY);
+#else
   alignment = MIN (MAX (alignment, PARM_BOUNDARY), STACK_BOUNDARY);
   if (abi_break && warn_psabi)
     {
@@ -7839,6 +7929,99 @@ aarch64_function_arg_boundary (machine_mode mode, const_tree type)
 		"%qT changed in GCC 9.1", type);
     }
   return alignment;
+#endif
+}
+
+/* For Darwin, we want to use the arg boundary computed when laying out the
+   function arg, to cope with items packed on the stack and the different
+   rules applied to unnamed parms.  */
+
+static unsigned int
+aarch64_function_arg_boundary_ca (machine_mode mode ATTRIBUTE_UNUSED,
+				  const_tree type ATTRIBUTE_UNUSED,
+				  cumulative_args_t ca ATTRIBUTE_UNUSED)
+{
+  unsigned int abi_break_gcc_9;
+  unsigned int abi_break_gcc_13;
+  unsigned int abi_break_gcc_14;
+  unsigned int alignment
+    = aarch64_function_arg_alignment (mode, type, &abi_break_gcc_9,
+				      &abi_break_gcc_13, &abi_break_gcc_14);
+  /* We rely on aarch64_layout_arg and aarch64_gimplify_va_arg_expr
+     to emit warnings about ABI incompatibility.  */
+#if TARGET_MACHO
+  CUMULATIVE_ARGS *pcum = get_cumulative_args (ca);
+gcc_checking_assert (pcum->aapcs_arg_processed);
+
+  bool named_p = pcum->darwinpcs_n_args_processed < pcum->darwinpcs_n_named;
+gcc_checking_assert (named_p == pcum->named_p);
+  machine_mode comp_mode = VOIDmode;
+  int nregs;
+  bool is_ha;
+  aarch64_vfp_is_call_or_return_candidate (mode, type, &comp_mode, &nregs,
+					   &is_ha, /*silent*/true);
+  bool no_pack = (TREE_CODE (type) == COMPLEX_TYPE
+      || (TREE_CODE (type) == RECORD_TYPE
+	  && !is_ha && !SCALAR_FLOAT_MODE_P (comp_mode))
+      || TREE_CODE (type) == UNION_TYPE);
+
+  bool in_regs = (pcum->aapcs_reg != NULL_RTX);
+
+  if ((named_p && !no_pack) || in_regs)
+    ; /* Leave the alignment as natural.  */
+  else
+    alignment = MAX (alignment, PARM_BOUNDARY);
+gcc_checking_assert (alignment == pcum->darwinpcs_arg_boundary);
+  return MIN (alignment, STACK_BOUNDARY);
+
+#else
+  alignment = MIN (MAX (alignment, PARM_BOUNDARY), STACK_BOUNDARY);
+  if (abi_break && warn_psabi)
+    {
+      abi_break = MIN (MAX (abi_break, PARM_BOUNDARY), STACK_BOUNDARY);
+      if (alignment != abi_break)
+	inform (input_location, "parameter passing for argument of type "
+		"%qT changed in GCC 9.1", type);
+    }
+  return alignment;
+#endif
+}
+
+/* Implement TARGET_FUNCTION_ARG_ROUND_BOUNDARY_CA for darwinpcs which allows
+   non-standard passing of byte-aligned items [D.2].  This is done by pulling
+   the values out of the cumulative args struct.  */
+
+static unsigned int
+aarch64_function_arg_round_boundary_ca (machine_mode mode ATTRIBUTE_UNUSED,
+					const_tree type ATTRIBUTE_UNUSED,
+					cumulative_args_t ca)
+{
+  CUMULATIVE_ARGS *pcum = get_cumulative_args (ca);
+gcc_checking_assert (pcum->aapcs_arg_processed);
+  bool named_p = pcum->darwinpcs_n_args_processed < pcum->darwinpcs_n_named;
+gcc_checking_assert (named_p == pcum->named_p);
+  bool last_named_p = pcum->darwinpcs_n_args_processed + 1 == pcum->darwinpcs_n_named;
+gcc_checking_assert (last_named_p == pcum->last_named_p);
+
+  unsigned boundary = BITS_PER_UNIT;
+  if (last_named_p && pcum->darwinpcs_sub_word_pos > 0)
+    {
+      /* Round the last named arg to the start of the next stack slot.  */
+      if (pcum->darwinpcs_sub_word_pos <= 4)
+	boundary = PARM_BOUNDARY;
+      else if (pcum->darwinpcs_sub_word_pos <= 6)
+	boundary = 4 * BITS_PER_UNIT;
+      else if (pcum->darwinpcs_sub_word_pos <= 7)
+	boundary = 2 * BITS_PER_UNIT;
+    }
+  else if (named_p)
+    /* Named args are naturally aligned, but with no rounding.  */
+    ;
+  else
+    /* un-named args are rounded to fill slots.  */
+    boundary = PARM_BOUNDARY;
+gcc_checking_assert (boundary == pcum->darwinpcs_arg_padding);
+  return boundary;
 }
 
 /* Implement TARGET_GET_RAW_RESULT_MODE and TARGET_GET_RAW_ARG_MODE.  */
@@ -13249,7 +13432,11 @@ aarch64_select_rtx_section (machine_mode mode,
   if (aarch64_can_use_per_function_literal_pools_p ())
     return function_section (current_function_decl);
 
+#if TARGET_MACHO
+  return machopic_select_rtx_section (mode, x, align);
+#else
   return default_elf_select_rtx_section (mode, x, align);
+#endif
 }
 
 /* Implement ASM_OUTPUT_POOL_EPILOGUE.  */
@@ -20367,7 +20554,7 @@ aarch64_setup_incoming_varargs (cumulative_args_t cum_v,
   int vr_saved = cfun->va_list_fpr_size;
 
   if (TARGET_MACHO)
-    return;
+    return default_setup_incoming_varargs (cum_v, arg, pretend_size, no_rtl);
 
   /* The caller has advanced CUM up to, but not beyond, the last named
      argument.  Advance a local copy of CUM past the last "real" named
@@ -28036,10 +28223,11 @@ aarch64_run_selftests (void)
 #undef TARGET_FUNCTION_ARG_BOUNDARY
 #define TARGET_FUNCTION_ARG_BOUNDARY aarch64_function_arg_boundary
 
-#if TARGET_MACHO
-#undef  TARGET_FUNCTION_ARG_ROUND_BOUNDARY
-#define TARGET_FUNCTION_ARG_ROUND_BOUNDARY aarch64_function_arg_round_boundary
-#endif
+#undef TARGET_FUNCTION_ARG_BOUNDARY_CA
+#define TARGET_FUNCTION_ARG_BOUNDARY_CA aarch64_function_arg_boundary_ca
+
+#undef  TARGET_FUNCTION_ARG_ROUND_BOUNDARY_CA
+#define TARGET_FUNCTION_ARG_ROUND_BOUNDARY_CA aarch64_function_arg_round_boundary_ca
 
 #undef TARGET_FUNCTION_ARG_PADDING
 #define TARGET_FUNCTION_ARG_PADDING aarch64_function_arg_padding

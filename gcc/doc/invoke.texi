@@ -17127,6 +17127,21 @@ the behavior of older compilers in which temporaries' stack space is
 not reused, the aggressive stack reuse can lead to runtime errors. This
 option is used to control the temporary stack reuse optimization.
 
+<<<<<<< HEAD
+=======
+@opindex fstack_use_cumulative_args
+@item -fstack-use-cumulative-args
+This option instructs the compiler to use the
+@code{cumulative_args_t}-based stack layout target hooks,
+@code{TARGET_FUNCTION_ARG_BOUNDARY_CA} and
+@code{TARGET_FUNCTION_ARG_ROUND_BOUNDARY_CA}. If a given target does
+not define these hooks, the default behaviour is to fallback to using
+the standard non-@code{_CA} variants instead. Certain targets (such as
+AArch64 Darwin) require using the more advanced @code{_CA}-based
+hooks: For these targets this option should be enabled by default.
+
+@opindex ftrapv
+>>>>>>> c3d8f49deb8 (call lowering, aarch64, Darwin: Provide control over stack layout and packing.)
 @item -ftrapv
 @opindex ftrapv
 This option generates traps for signed overflow on addition, subtraction,
