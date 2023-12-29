@@ -2,7 +2,7 @@
 /* { dg-additional-options "-O " } */
 /* { dg-final { check-function-bodies "**" "" "" { target *-*-darwin* } } } */
 
-/* This will fail, because of issue #74
+/* This used to fail, because of issue #74
 **foo: 
 **	cmp	w0, w1
 **	cset	w0, eq
