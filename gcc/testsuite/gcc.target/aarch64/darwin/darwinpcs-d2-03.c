@@ -38,12 +38,14 @@ sf_packing (float a, float b, float c, float d,
 /* So the stores to sp+12 and 20 pack the floats onto the stack.
 **call_sf_packing:
 **	...
+**	add	x29, sp, 32
+**	...
 **	fmov	s1, 1.0e\+0
-**	str	s1, \[sp, 48\]
+**	str	s1, \[x29, 16\]
 **	fmov	s2, 2.0e\+0
-**	str	s2, \[sp, 52\]
+**	str	s2, \[x29, 20\]
 **	mov	w[0-9]+, 1077936128
-**	ldr	x[0-9]+, \[sp, 48\]
+**	ldr	x[0-9]+, \[x29, 16\]
 **	str	x[0-9]+, \[sp, 12\]
 **	str	w[0-9]+, \[sp, 20\]
 **	str	x[0-9]+, \[sp\]
