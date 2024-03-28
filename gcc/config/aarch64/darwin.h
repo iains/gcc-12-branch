@@ -101,6 +101,9 @@ along with GCC; see the file COPYING3.  If not see
 /* The arch is known as 'arm64' by the system tools.  */
 #define DARWIN_ARCH_SPEC "arm64"
 
+#undef DARWIN_HEAP_T_LIB
+#define DARWIN_HEAP_T_LIB " -lheapt_w "
+
 #undef SUBTARGET_EXTRA_SPECS
 #define SUBTARGET_EXTRA_SPECS					\
   DARWIN_EXTRA_SPECS						\
