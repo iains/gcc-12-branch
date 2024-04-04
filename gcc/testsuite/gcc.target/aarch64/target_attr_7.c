@@ -19,6 +19,6 @@ bam (int a)
   return a - bar (a);
 }
 
-/* { dg-final { scan-assembler-times "//.tune xgene1" 1 } } */
-/* { dg-final { scan-assembler-times "//.tune cortex-a53" 1 } } */
+/* { dg-final { scan-assembler-times "(?://|;).tune\\sxgene1" 1 } } */
+/* { dg-final { scan-assembler-times "(?://|;).tune\\scortex-a53" 1 } } */
 /* { dg-final { scan-assembler-not "thunderx" } } */

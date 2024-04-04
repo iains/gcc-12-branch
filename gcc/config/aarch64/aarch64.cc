@@ -23369,7 +23369,7 @@ aarch64_declare_function_name (FILE *stream, const char* name,
 				tree fndecl)
 {
   /* Update .arch and .tune as needed.  */
-  aarch64_function_options_preamble (stream, fndecl);
+  aarch64_function_options_preamble (fndecl);
   /* Emit any necessary pcs information.  */
   aarch64_asm_output_variant_pcs (stream, fndecl, name);
 
