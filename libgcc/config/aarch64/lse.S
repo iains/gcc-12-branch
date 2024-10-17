@@ -197,9 +197,9 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 	.text
 	.balign	16
 	.private_extern	_\name
-	.cfi_startproc
 _\name:
 	BTI_C
+	.cfi_startproc
 .endm
 
 .macro	ENDFN name
