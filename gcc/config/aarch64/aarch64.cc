@@ -21475,6 +21475,8 @@ aarch64_mangle_type (const_tree type)
     {
       if (TYPE_MODE (type) == BFmode)
 	return "u6__bf16";
+      else if (TARGET_MACHO && TYPE_MODE (type) == HFmode)
+	return "DF16_"; /* Match clang, and later GCC.  */
       else
 	return "Dh";
     }
